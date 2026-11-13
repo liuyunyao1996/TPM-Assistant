@@ -1,0 +1,1465 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New TPM Engagement | AIA Third Party Management System</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --shell: #331831;
+      --canvas: #f3f2f1;
+      --surface: #fff;
+      --line: #e5e3e1;
+      --field: #f2f2f2;
+      --text: #242424;
+      --muted: #605e5c;
+      --red: #a50032;
+      --blue: #245684;
+      font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: 48px minmax(0, 1fr);
+      color: var(--text);
+      background: var(--canvas);
+    }
+    [hidden] { display: none !important; }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(max-content, 1fr) minmax(160px, 32%) minmax(90px, 1fr);
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      color: white;
+      background: var(--shell);
+    }
+    .app-name, .top-actions { display: flex; align-items: center; gap: 13px; white-space: nowrap; }
+    .power-apps { border-right: 1px solid #765c72; padding-right: 13px; font-weight: 600; }
+    .waffle {
+      width: 15px;
+      height: 15px;
+      background: radial-gradient(circle, currentColor 1px, transparent 1.4px) 0 0 / 5px 5px;
+    }
+    .search-shell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 2px;
+      color: #413541;
+      background: #eee9ee;
+    }
+    .search-icon {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      margin: 0 3px 3px 0;
+      border: 1.4px solid currentColor;
+      border-radius: 50%;
+      position: relative;
+      flex: none;
+    }
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 5px;
+      height: 1px;
+      background: currentColor;
+      transform: rotate(45deg);
+      transform-origin: left;
+    }
+    .top-actions { justify-content: end; font-size: 17px; }
+    .avatar { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #a992a5; border-radius: 50%; font-size: 11px; }
+    .workspace { display: flex; min-height: 0; }
+    .sidebar {
+      width: 164px;
+      flex: none;
+      background: #f5f4f3;
+      border-right: 1px solid #dedcd9;
+      padding: 6px 0;
+    }
+    .sidebar.is-collapsed { width: 44px; }
+    .sidebar.is-collapsed .nav-label, .sidebar.is-collapsed .nav-group { display: none; }
+    .nav-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 38px;
+      padding: 0 12px;
+      white-space: nowrap;
+      color: inherit;
+      text-decoration: none;
+    }
+    .nav-row:hover { background: #eae8e6; }
+    .nav-icon { display: inline-grid; place-items: center; width: 19px; flex: none; font-size: 17px; }
+    .menu-button { width: 100%; background: transparent; border: 0; cursor: pointer; }
+    .nav-group { margin: 12px 12px 3px; font-weight: 600; }
+    .record { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .record-header { padding: 7px 12px 0; }
+    .toolbar, .record-heading, .section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px #00000012;
+    }
+    .toolbar { display: flex; align-items: center; gap: 6px; min-height: 43px; padding: 4px 9px; margin-bottom: 10px; }
+    .toolbar button, .form-assist, .lookup-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      white-space: nowrap;
+    }
+    .toolbar button:disabled, .form-assist:disabled { color: #545250; }
+    .toolbar button:first-child { border-right-color: var(--line); border-radius: 0; }
+    .record-heading h1 {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 0;
+      padding: 17px 15px 18px;
+      font-size: 19px;
+      font-weight: 600;
+    }
+    .home-icon { color: var(--red); font-size: 22px; line-height: 1; }
+    .tabs { display: flex; align-items: end; gap: 17px; min-height: 41px; padding: 0 11px; }
+    .tab {
+      align-self: stretch;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      padding: 8px 0 7px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { border-color: var(--blue); font-weight: 600; }
+    .form-assist { margin: 0 0 3px auto; border-color: var(--line); }
+    .form-scroll { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 18px; }
+    .section { margin: 0 0 12px; scroll-margin-top: 10px; }
+    .section h2 {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid #efeeed;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .section-number {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      color: white;
+      background: var(--red);
+      font-size: 12px;
+    }
+    .section-body { padding: 10px 12px 13px; }
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 19px; }
+    .field { min-width: 0; }
+    .field > label, .question > label { display: block; margin-bottom: 5px; }
+    .full-width { grid-column: 1 / -1; }
+    .first-column { grid-column: 1; }
+    .compact { max-width: 1060px; }
+    .short { max-width: 515px; }
+    .control {
+      display: block;
+      width: 100%;
+      min-height: 33px;
+      padding: 5px 10px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      color: var(--text);
+      background: var(--field);
+    }
+    .control:enabled:not([readonly]):hover { border-color: #a9a6a3; }
+    .control:enabled:focus-visible { outline-offset: 0; }
+    .control:disabled, .control[readonly] { opacity: 1; background: #ebebeb; color: var(--muted); }
+    select.control:enabled, input[type="date"]:enabled { cursor: pointer; }
+    textarea.control { min-height: 122px; resize: vertical; }
+    .required { margin-left: 3px; color: #9f2635; }
+    .lock {
+      position: relative;
+      display: inline-block;
+      width: 9px;
+      height: 7px;
+      margin-left: 5px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      color: var(--muted);
+    }
+    .lock::before { content: ""; position: absolute; left: 1px; top: -5px; width: 3px; height: 4px; border: 1px solid currentColor; border-radius: 3px 3px 0 0; }
+    .hint-icon { margin-left: 5px; color: var(--muted); font-size: 12px; }
+    .notice {
+      margin: 14px 0 0;
+      padding: 12px 16px;
+      border-radius: 3px;
+      background: #f7f7f7;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .notice p { margin: 0; }
+    .notice p + p { margin-top: 6px; }
+    .portal-name { text-decoration: underline; color: #304d62; }
+    .vendor-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 17px; }
+    .vendor-row { display: flex; align-items: center; gap: 6px; }
+    .vendor-row .control { min-width: 0; }
+    .lookup-button { min-height: 33px; flex: none; border-color: #d4d2cf; background: white; cursor: pointer; }
+    .lookup-button:hover { background: #f5f4f3; }
+    .vendor-summary {
+      min-height: 84px;
+      margin: 0;
+      padding: 12px;
+      background: #f7f7f7;
+      color: var(--muted);
+      border-radius: 3px;
+    }
+    .question + .question { margin-top: 14px; }
+    .switch-row { display: inline-flex; align-items: center; gap: 9px; color: var(--muted); }
+    .switch {
+      appearance: none;
+      width: 36px;
+      height: 19px;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      background: #fff;
+      border: 1px solid #9a9998;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 11px; height: 11px; border-radius: 50%; background: #777675; }
+    .switch:checked { background: var(--blue); border-color: var(--blue); }
+    .switch:checked::before { left: 20px; background: white; }
+    .switch-value { min-width: 23px; }
+    dialog { width: min(500px, calc(100% - 28px)); border: 1px solid var(--line); border-radius: 5px; padding: 0; color: var(--text); box-shadow: 0 12px 40px #0004; }
+    dialog::backdrop { background: #0005; }
+    .dialog-heading { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+    .dialog-heading h2 { margin: 0; font-size: 16px; }
+    .dialog-close { border: 0; background: transparent; font-size: 22px; cursor: pointer; }
+    .dialog-content { padding: 12px 16px 16px; }
+    .vendor-results { display: grid; gap: 3px; margin: 8px 0 0; }
+    .vendor-result { text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 2px; background: white; cursor: pointer; }
+    .vendor-result:hover { background: var(--field); }
+    .progress-list { margin: 0; padding: 0; list-style: none; }
+    .progress-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .progress-list li:last-child { border-bottom: 0; }
+    .progress-list button { padding: 0; border: 0; background: transparent; color: var(--blue); text-align: left; cursor: pointer; }
+    .progress-list button:hover { text-decoration: underline; }
+    .progress-status { color: var(--muted); text-align: right; }
+    @media (max-width: 800px) {
+      .power-apps, .top-actions { display: none; }
+      .topbar { grid-template-columns: minmax(0, 1fr) minmax(75px, 25%); }
+      .app-name { min-width: 0; }
+      .app-title { overflow: hidden; text-overflow: ellipsis; }
+    }
+    @media (max-width: 580px) {
+      .record-header { padding-inline: 6px; }
+      .form-scroll { padding-inline: 6px; }
+      .record-heading h1 { font-size: 16px; }
+      .fields, .vendor-layout { grid-template-columns: minmax(0, 1fr); }
+      .vendor-summary:empty { display: none; }
+      .form-assist { display: none; }
+    }
+  </style>
+  <style>
+:root {
+  --assistant-accent: #98163f;
+  --assistant-hover: #7c1033;
+  --assistant-line: #e9e2e6;
+  --assistant-muted: #665e65;
+  --assistant-soft: #faf6f8;
+}
+.tpms-launch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  color: white;
+  background: transparent;
+  border: 1px solid #a48097;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tpms-launch:hover { background: #ffffff19; }
+.tpms-launch:focus-visible { outline-color: white; }
+.tpms-launch-mark { font-size: 14px; }
+.form-assist.tpms-form-assist:hover { background: var(--assistant-soft); }
+.form-assist.tpms-form-assist { color: var(--assistant-accent); cursor: pointer; }
+.tpms-side {
+  z-index: 2;
+  display: flex;
+  flex: 0 0 clamp(332px, 29vw, 410px);
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: white;
+  border-left: 1px solid var(--assistant-line);
+}
+.tpms-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 55px;
+  gap: 10px;
+  padding: 9px 17px;
+  border-bottom: 1px solid var(--assistant-line);
+}
+.tpms-side-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.tpms-side-head h2 span { margin-right: 5px; color: var(--assistant-accent); font-size: 17px; }
+.tpms-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--assistant-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.tpms-close:hover { background: var(--assistant-soft); }
+.tpms-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 19px 17px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.tpms-body h3 { margin: 0 0 6px; font-size: 18px; font-weight: 650; letter-spacing: -.2px; }
+.tpms-body p { margin: 0; }
+.tpms-muted { color: var(--assistant-muted); font-size: 12px; }
+.tpms-btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  min-height: 33px;
+  padding: 5px 10px;
+  color: var(--assistant-accent);
+  background: white;
+  border: 1px solid var(--assistant-line);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: center;
+  cursor: pointer;
+}
+.tpms-btn:hover { background: var(--assistant-soft); }
+.tpms-primary { background: var(--assistant-accent); border-color: var(--assistant-accent); color: white; }
+.tpms-primary:hover { background: var(--assistant-hover); }
+.tpms-btn:disabled { opacity: .48; cursor: default; }
+.tpms-primary:disabled:hover { background: var(--assistant-accent); }
+.tpms-text-button {
+  padding: 1px 0;
+  color: var(--assistant-accent);
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.tpms-text-button:hover { text-decoration: underline; }
+.tpms-upload { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--assistant-line); }
+.tpms-upload h3 { margin: 0 0 7px; font-size: 14px; font-weight: 600; }
+.tpms-upload p { margin: 7px 0 0; }
+.tpms-file-list { margin: 6px 0 0; padding: 0; list-style: none; }
+.tpms-file-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 0 3px 1px; border-bottom: 1px solid var(--assistant-line); }
+.tpms-file-list li span { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
+.tpms-file-list .tpms-close { flex: none; height: 24px; width: 24px; font-size: 17px; }
+.tpms-doc-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.tpms-side :focus-visible, .tpms-upload :focus-visible { outline-color: var(--assistant-accent); }
+@media (max-width: 1050px) {
+  .tpms-original-actions { display: none; }
+  .toolbar { flex-wrap: wrap; }
+  .form-assist.tpms-form-assist { display: none; }
+}
+@media (max-width: 800px) {
+  .topbar { grid-template-columns: minmax(0, 1fr) minmax(75px, 23%) auto; }
+  .top-actions { display: flex; gap: 7px; }
+}
+@media (max-width: 720px) {
+  .workspace { position: relative; }
+  .tpms-side { position: absolute; inset: 0 0 0 auto; width: min(100%, 395px); box-shadow: -8px 0 24px #3318311a; }
+}
+@media (max-width: 580px) {
+  .topbar { grid-template-columns: minmax(0, 1fr) auto; }
+  .search-shell, .tpms-launch-label { display: none; }
+}
+.tpms-head-actions { display: flex; align-items: center; gap: 6px; }
+.tpms-new-chat { min-height: 28px; padding: 3px 7px; white-space: nowrap; }
+.tpms-analysis-status { display: flex; align-items: center; }
+.tpms-status-icon {
+  position: relative;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  padding: 0;
+  color: var(--assistant-accent);
+  background: var(--assistant-soft);
+  border: 1px solid var(--assistant-line);
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+}
+button.tpms-status-icon { cursor: pointer; }
+button.tpms-status-icon:hover { background: #f4e5ec; }
+.tpms-status-icon[data-tip]::after {
+  position: absolute;
+  z-index: 3;
+  top: 30px;
+  right: 0;
+  width: max-content;
+  max-width: 205px;
+  padding: 5px 7px;
+  content: attr(data-tip);
+  background: #33252d;
+  color: white;
+  border-radius: 4px;
+  font-size: 11px;
+  opacity: 0;
+  pointer-events: none;
+}
+.tpms-status-icon:hover::after, .tpms-status-icon:focus-visible::after { opacity: 1; }
+.tpms-status-icon.complete { color: #236b50; background: #eef7f2; border-color: #dbece3; }
+.tpms-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #e7cbd7;
+  border-top-color: var(--assistant-accent);
+  border-radius: 50%;
+  animation: tpms-spin .8s linear infinite;
+}
+@keyframes tpms-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tpms-spinner { animation: none; } }
+.tpms-tabs { display: flex; gap: 15px; padding: 0 17px; border-bottom: 1px solid var(--assistant-line); }
+.tpms-tabs button {
+  padding: 7px 2px 6px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--assistant-muted);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.tpms-tabs button[aria-pressed="true"] { color: var(--assistant-accent); border-bottom-color: var(--assistant-accent); }
+.tpms-side .tpms-body { background: #fdfbfc; }
+.tpms-chat { display: grid; gap: 13px; }
+.tpms-message, .tpms-message-card {
+  min-width: 0;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid var(--assistant-line);
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.tpms-message { width: fit-content; max-width: 95%; white-space: pre-wrap; }
+.tpms-message.user { justify-self: end; background: #f7ebf1; border-color: #ebd9e2; }
+.tpms-message-context { display: block; margin-bottom: 3px; color: var(--assistant-accent); font-weight: 650; }
+.tpms-message-card h3 { margin: 0 0 4px; font-size: 14px; }
+.tpms-message-card p + p { margin-top: 5px; }
+.tpms-msg-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tpms-msg-actions .tpms-btn { min-height: 29px; }
+.tpms-doc-hint { margin-top: 5px !important; }
+.tpms-result-card { padding: 10px; }
+.tpms-result-card > .tpms-msg-actions { margin-bottom: 9px; }
+.tpms-question-list, .tpms-report-list { margin: 0; padding: 0; list-style: none; }
+.tpms-question-list > li, .tpms-report-list > li { border-top: 1px solid var(--assistant-line); }
+.tpms-question { min-width: 0; }
+.tpms-question > summary, .tpms-report-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: baseline;
+  padding: 8px 0;
+  list-style: none;
+  cursor: pointer;
+}
+.tpms-question > summary::-webkit-details-marker, .tpms-report-summary::-webkit-details-marker { display: none; }
+.tpms-question > summary:hover, .tpms-report-summary:hover { color: var(--assistant-accent); }
+.tpms-question-title { font-weight: 650; }
+.tpms-question-title::before { content: '›'; display: inline-block; margin-right: 6px; color: var(--assistant-accent); }
+details[open] > summary .tpms-question-title::before { transform: rotate(90deg); }
+.tpms-question-answer { max-width: 100px; color: var(--assistant-muted); text-align: right; }
+.tpms-question-content { padding: 0 0 9px 10px; }
+.tpms-evidence { margin-top: 6px; }
+.tpms-evidence summary, .tpms-more > summary { color: var(--assistant-accent); font-weight: 650; cursor: pointer; }
+.tpms-evidence blockquote { margin: 5px 0 0; padding: 5px 7px; background: var(--assistant-soft); border-left: 2px solid #c792a7; }
+.tpms-more { padding: 7px 0 0; border-top: 1px solid var(--assistant-line); }
+.tpms-more > summary { padding-bottom: 5px; }
+.tpms-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; padding: 11px 15px; border-top: 1px solid var(--assistant-line); }
+.tpms-input-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 3px 5px; border: 1px solid #ddcfd8; border-radius: 5px; }
+.tpms-input-wrap:focus-within { border-color: var(--assistant-accent); }
+.tpms-composer input { flex: 1 1 90px; width: 0; min-width: 75px; padding: 3px; border: 0; outline: none; font-size: 12px; }
+.tpms-composer input:focus-visible { outline: none; }
+.tpms-context {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: var(--assistant-accent);
+  background: #f7eaf0;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.tpms-context button { border: 0; padding: 0 2px; background: transparent; color: inherit; cursor: pointer; }
+.tpms-field-ask { margin-top: 5px; }
+.tpms-report-list { margin-top: 12px; font-size: 12px; }
+.tpms-report-list > li { padding: 2px 0; }
+.tpms-report-summary { grid-template-columns: minmax(0, 1fr); overflow-wrap: anywhere; }
+.tpms-report-content { padding: 0 0 9px 10px; }
+.tpms-report-content > p { margin-bottom: 6px; overflow-wrap: anywhere; }
+.tpms-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="app-name">
+      <span class="waffle" aria-hidden="true"></span>
+      <span class="power-apps">Power Apps</span>
+      <span class="app-title">AIA Third Party Management System</span>
+    </div>
+    <div class="search-shell" aria-hidden="true"><span class="search-icon"></span> Search</div>
+    <div class="top-actions"><span class="tpms-original-actions" aria-hidden="true">＋　⚙　?</span><button type="button" class="tpms-launch" id="tpms-launch" data-action="open" aria-label="Open TPM Assistant" aria-controls="tpms-assistant" aria-expanded="true"><span class="tpms-launch-mark" aria-hidden="true">✦</span><span class="tpms-launch-label">TPM Assistant</span></button><span class="avatar" aria-hidden="true">DE</span></div>
+  </header>
+
+  <div class="workspace">
+    <nav id="sidebar" class="sidebar" aria-label="TPM navigation">
+      <button type="button" id="toggle-nav" class="nav-row menu-button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-links"><span class="nav-icon" aria-hidden="true">≡</span></button>
+      <div id="sidebar-links">
+        <a class="nav-row" href="#assessment-details" aria-label="Home"><span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-label">Home</span></a>
+        <div class="nav-group">TPM</div>
+        <a class="nav-row" href="#assessment-details" aria-label="LandingPage"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-label">LandingPage</span></a>
+      </div>
+    </nav>
+
+    <main class="record">
+      <div class="record-header">
+        <div class="toolbar" role="group" aria-label="Commands">
+          <button type="button" disabled aria-label="Back">←</button>
+          <button type="button" disabled><span aria-hidden="true">▣</span> Translate</button>
+          <button type="button" disabled><span aria-hidden="true">▤</span> Change Log</button>
+        </div>
+        <div class="record-heading">
+          <h1><span class="home-icon" aria-hidden="true">⌂</span> Home <span aria-hidden="true">&gt;</span> My Actions <span aria-hidden="true">&gt;</span> New TPM Engagement</h1>
+          <div class="tabs" role="tablist" aria-label="Engagement">
+            <button type="button" class="tab" id="general-tab" role="tab" aria-selected="true" aria-controls="general-panel">General Information</button>
+            <button type="button" class="tab" id="progress-tab" role="tab" aria-selected="false" aria-controls="progress-panel" tabindex="-1">Progress</button>
+            <button type="button" class="form-assist tpms-form-assist" data-action="open">Form assist</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-scroll" id="form-scroll">
+        <div id="general-panel" role="tabpanel" aria-labelledby="general-tab">
+          <form id="engagement-form" autocomplete="off">
+            <section class="section" id="assessment-details">
+              <h2><span class="section-number">1</span> Assessment Details</h2>
+              <div class="section-body">
+                <div class="field short">
+                  <label for="assessment-type">Assessment Type <span class="required" aria-hidden="true">*</span><span class="lock" aria-hidden="true"></span></label>
+                  <input id="assessment-type" name="assessmentType" class="control" value="Engagement Level (Default)" readonly>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="engaging-entity">
+              <h2><span class="section-number">2</span> Engaging Entity Information</h2>
+              <div class="section-body fields">
+                <div class="field">
+                  <label for="business-unit">Business Unit <span class="required" aria-hidden="true">*</span></label>
+                  <select id="business-unit" name="businessUnit" class="control" required>
+                    <option value="">--Select--</option>
+                    <option>AIA Australia</option>
+                    <option>AIA Blue Cross</option>
+                    <option>AIA Cambodia</option>
+                    <option>AIA China</option>
+                    <option>AIA Global Insurance Limited</option>
+                    <option>AIA Group</option>
+                    <option>AIA Hong Kong &amp; Macau</option>
+                    <option>AIA Indonesia</option>
+                    <option>AIA IT Malaysia</option>
+                    <option>AIA Korea</option>
+                    <option>AIA Malaysia</option>
+                    <option>AIA Myanmar</option>
+                    <option>AIA New Zealand</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="legal-entity">AIA Legal Entity Name <span class="required" aria-hidden="true">*</span><span class="lock" aria-hidden="true"></span></label>
+                  <input id="legal-entity" name="legalEntity" class="control" readonly>
+                </div>
+                <div class="field">
+                  <label for="function-name">Function Name <span class="required" aria-hidden="true">*</span><span id="function-lock" class="lock" aria-hidden="true"></span></label>
+                  <select id="function-name" name="functionName" class="control" required disabled>
+                    <option value="">---</option>
+                    <option>Finance</option><option>Group Technology</option><option>Human Resources</option><option>Legal &amp; Compliance</option><option>Operations</option><option>Procurement</option><option>Risk</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="secondary-function">Secondary Function Name (If Applicable) <span id="secondary-function-lock" class="lock" aria-hidden="true"></span></label>
+                  <select id="secondary-function" name="secondaryFunction" class="control" disabled>
+                    <option value="">---</option>
+                    <option>Finance</option><option>Group Technology</option><option>Human Resources</option><option>Legal &amp; Compliance</option><option>Operations</option><option>Procurement</option><option>Risk</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="third-party-information">
+              <h2><span class="section-number">3</span> Third Party Information</h2>
+              <div class="section-body">
+                <div class="vendor-layout compact">
+                  <div class="field">
+                    <label for="third-party-name">Third Party Name <span class="required" aria-hidden="true">*</span></label>
+                    <div class="vendor-row">
+                      <select id="third-party-name" name="thirdPartyId" class="control" required><option value="">--Select--</option></select>
+                      <button type="button" id="open-vendor" class="lookup-button" aria-label="Look up a third party" title="Look up a third party"><span class="search-icon" aria-hidden="true"></span></button>
+                    </div>
+                  </div>
+                  <p class="vendor-summary" id="vendor-summary" role="status"></p>
+                </div>
+                <div class="notice">
+                  <p>If multiple IDs exist under the same vendor name, please consult with your local Finance team or GFS if you are unsure which to select.<br>Selecting an incorrect ID may result in delays in TPM completion and/or payment processing.</p>
+                  <p>GFS Contact: Raise a ticket via the <span class="portal-name">GFS Service Portal</span> (select 'Vendor Master Data Maintenance')</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="engagement-details">
+              <h2><span class="section-number">4</span> Engagement Details</h2>
+              <div class="section-body">
+                <div class="fields compact">
+                  <div class="field">
+                    <label for="third-party-category">Third Party Category <span class="required" aria-hidden="true">*</span></label>
+                    <select id="third-party-category" name="thirdPartyCategory" class="control" required>
+                      <option value="">--Select--</option>
+                      <option>Supplier / Vendor</option><option>Consultant</option><option>Business Partner</option><option>Intra-Group Service Provider</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="agreement-type">Type of Agreement</label>
+                    <select id="agreement-type" name="agreementType" class="control">
+                      <option value="">--Select--</option>
+                      <option>Master Services Agreement</option><option>Service Agreement</option><option>Statement of Work</option><option>Purchase Order</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="field first-column">
+                    <label for="contract-value">Estimated Contract Value in USD <span class="hint-icon" title="Enter the estimated total contract value in USD." aria-hidden="true">ⓘ</span></label>
+                    <input id="contract-value" name="contractValueUsd" class="control" type="number" min="0" step="0.01" inputmode="decimal">
+                  </div>
+                  <div class="field first-column">
+                    <label for="start-date">Proposed Contract Start Date <span class="required" aria-hidden="true">*</span></label>
+                    <input id="start-date" name="contractStartDate" class="control" type="date" required>
+                  </div>
+                  <div class="field">
+                    <label for="end-date">Proposed Contract End Date</label>
+                    <input id="end-date" name="contractEndDate" class="control" type="date">
+                  </div>
+                </div>
+                <div class="field" style="margin-top: 13px">
+                  <label for="description">Engagement Description <span class="required" aria-hidden="true">*</span></label>
+                  <textarea id="description" name="engagementDescription" class="control" aria-describedby="description-note" required></textarea>
+                </div>
+                <p class="notice" id="description-note">Please supplement the service description in English if your draft is in local language.</p>
+                <div id="tpms-upload" class="tpms-upload" role="group" aria-labelledby="tpms-upload-title" tabindex="-1">
+                  <h3 id="tpms-upload-title">Contract documents</h3>
+                  <div id="tpms-upload-actions" class="tpms-doc-actions">
+                    <input type="file" id="tpms-document-input" accept=".pdf,.docx" multiple hidden>
+                    <button type="button" class="tpms-btn" id="tpms-pick-documents" data-action="pick">Upload documents</button>
+                    <button type="button" class="tpms-text-button" id="tpms-sample-documents" data-action="samples">Use sample documents</button>
+                    <span class="tpms-muted">PDF or DOCX</span>
+                  </div>
+                  <ul id="tpms-upload-list" class="tpms-file-list" aria-label="Contract documents" hidden></ul>
+                  <p id="tpms-upload-status" class="tpms-muted" role="status">Demo analysis uses sample evidence.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="privacy-and-security">
+              <h2><span class="section-number">5</span> Data Privacy &amp; Information Security Questions</h2>
+              <div class="section-body">
+                <div class="question">
+                  <label for="system-access">Will the Third Party have access to AIA systems or networks and/or provide technology services? <span class="required" aria-hidden="true">*</span></label>
+                  <div class="switch-row"><input id="system-access" name="systemAccess" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+                </div>
+                <div class="question">
+                  <label for="confidential-data">Will the Third Party handle AIA confidential and/or highly confidential data? <span class="required" aria-hidden="true">*</span></label>
+                  <div class="switch-row"><input id="confidential-data" name="confidentialData" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="outsourcing">
+              <h2><span class="section-number">6</span> Outsourcing Question</h2>
+              <div class="section-body question">
+                <label for="delegated-operation">Will the service provider be delegated the execution of a recurring operational role or service that AIA would otherwise perform itself? <span class="required" aria-hidden="true">*</span></label>
+                <div class="switch-row"><input id="delegated-operation" name="delegatedOperation" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+              </div>
+            </section>
+
+            <section class="section" id="business-continuity">
+              <h2><span class="section-number">7</span> Business Continuity Question</h2>
+              <div class="section-body question">
+                <label for="continuity-impact">Would the failure of this third-party service impact AIA’s ability to continue delivering essential business functions and meet obligations to customers, regulators, or internal business units/external partner organizations? <span class="required" aria-hidden="true">*</span></label>
+                <div class="switch-row"><input id="continuity-impact" name="continuityImpact" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+              </div>
+            </section>
+
+            <section class="section" id="business-approver">
+              <h2><span class="section-number">8</span> Business Approver</h2>
+              <div class="section-body field">
+                <label for="approver">Please select a Business Approver for this engagement <span class="required" aria-hidden="true">*</span></label>
+                <select id="approver" name="businessApprover" class="control short" required>
+                  <option value="">--Select--</option>
+                  <option>Demo User – Business Operations</option><option>Demo User – Technology</option><option>Demo User – Finance</option>
+                </select>
+              </div>
+            </section>
+
+            <section class="section" id="secondary-owner">
+              <h2><span class="section-number">9</span> Secondary Contract Owner</h2>
+              <div class="section-body field">
+                <label for="contract-owner">Please select a Secondary Contract Owner for this engagement</label>
+                <select id="contract-owner" name="secondaryContractOwner" class="control short">
+                  <option value="">---</option>
+                  <option>Demo User – Business Operations</option><option>Demo User – Technology</option><option>Demo User – Finance</option>
+                </select>
+              </div>
+            </section>
+          </form>
+        </div>
+
+        <div id="progress-panel" role="tabpanel" aria-labelledby="progress-tab" tabindex="0" hidden>
+          <section class="section">
+            <h2>Engagement Progress</h2>
+            <div class="section-body"><ul class="progress-list" id="progress-list"></ul></div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <aside id="tpms-assistant" class="tpms-side" aria-label="TPM Assistant">
+      <header class="tpms-side-head">
+        <h2><span aria-hidden="true">✦</span> TPM Assistant</h2>
+        <div class="tpms-head-actions">
+          <span id="tpms-analysis-status" class="tpms-analysis-status" role="status"></span>
+          <button type="button" class="tpms-btn tpms-new-chat" id="tpms-new-chat" data-action="new-chat">New chat</button>
+          <button type="button" class="tpms-close" data-action="close" aria-label="Close assistant">×</button>
+        </div>
+      </header>
+      <nav id="tpms-reviewer-tabs" class="tpms-tabs" aria-label="Assistant views" hidden>
+        <button type="button" data-action="chat-tab" id="tpms-chat-tab" aria-controls="tpms-panel-body" aria-pressed="true">Chat</button>
+        <button type="button" data-action="reports-tab" id="tpms-reports-tab" aria-controls="tpms-panel-body" aria-pressed="false">Reports</button>
+      </nav>
+      <div class="tpms-body" id="tpms-panel-body" tabindex="-1" aria-label="Assistant conversation"></div>
+      <form id="tpms-chat-form" class="tpms-composer" aria-label="Ask the assistant">
+        <div class="tpms-input-wrap">
+          <span id="tpms-question-context" class="tpms-context" hidden></span>
+          <input id="tpms-chat-input" aria-label="Message" placeholder="Ask the assistant…" autocomplete="off">
+        </div>
+        <button type="submit" class="tpms-btn tpms-primary">Send</button>
+      </form>
+      <span id="tpms-announcement" class="tpms-sr-only" role="status"></span>
+    </aside>
+  </div>
+
+  <dialog id="vendor-dialog" aria-labelledby="vendor-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="vendor-dialog-title">Look up Third Party</h2>
+      <button type="button" class="dialog-close" id="close-vendor" aria-label="Close vendor lookup">×</button>
+    </div>
+    <div class="dialog-content field">
+      <label for="vendor-search">Search by vendor name or ID</label>
+      <input id="vendor-search" class="control" type="search" autofocus>
+      <div id="vendor-results" class="vendor-results"></div>
+    </div>
+  </dialog>
+
+  <script>
+    const byId = (id) => document.getElementById(id);
+    const form = byId('engagement-form');
+    const scroller = byId('form-scroll');
+    const generalTab = byId('general-tab');
+    const progressTab = byId('progress-tab');
+    let generalScrollTop = 0;
+
+    // The business-unit list follows the screenshots. Other lookup values are demo data.
+    const vendors = [
+      { id: 'DEMO-1001', name: 'Demo Cloud Services Ltd.' },
+      { id: 'DEMO-1002', name: 'Demo Cloud Services Ltd.' },
+      { id: 'DEMO-2001', name: 'Demo Advisory Partners Ltd.' },
+      { id: 'DEMO-3001', name: 'Demo Facilities Services Ltd.' }
+    ];
+    const vendorLabel = (vendor) => vendor.name + ' (' + vendor.id + ')';
+    const vendorSelect = byId('third-party-name');
+    const vendorDialog = byId('vendor-dialog');
+    const vendorSearch = byId('vendor-search');
+
+    function updateBusinessUnit() {
+      const unit = byId('business-unit').value;
+      byId('legal-entity').value = unit ? unit + ' (Demo)' : '';
+      for (const [id, lockId] of [['function-name', 'function-lock'], ['secondary-function', 'secondary-function-lock']]) {
+        byId(id).value = '';
+        byId(id).disabled = !unit;
+        byId(lockId).hidden = Boolean(unit);
+      }
+    }
+
+    function updateVendorSummary() {
+      const vendor = vendors.find(({ id }) => id === vendorSelect.value);
+      byId('vendor-summary').textContent = vendor ? 'Selected vendor: ' + vendorLabel(vendor) : '';
+    }
+
+    function renderVendorResults() {
+      const query = vendorSearch.value.trim().toLowerCase();
+      const results = byId('vendor-results');
+      results.replaceChildren();
+      for (const vendor of vendors.filter((item) => vendorLabel(item).toLowerCase().includes(query))) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'vendor-result';
+        button.textContent = vendorLabel(vendor);
+        button.addEventListener('click', () => {
+          vendorSelect.value = vendor.id;
+          vendorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          vendorDialog.close();
+          vendorSelect.focus();
+        });
+        results.append(button);
+      }
+      if (!results.childElementCount) {
+        const message = document.createElement('p');
+        message.textContent = 'No vendors found.';
+        results.append(message);
+      }
+    }
+
+    function sectionStatus(section) {
+      if (section.id === 'assessment-details') return 'Default selected';
+      const switches = Array.from(section.querySelectorAll('.switch'));
+      if (switches.length) return switches.map((field) => field.checked ? 'Yes' : 'No').join(' / ');
+      const requiredFields = Array.from(section.querySelectorAll('[required]'));
+      if (requiredFields.some((field) => !field.value.trim() || !field.validity.valid)) return 'Required fields incomplete';
+      if (section.querySelector(':invalid')) return 'Check entered values';
+      if (requiredFields.length) return 'Required fields complete';
+      return section.querySelector('select').value ? 'Selected' : 'Optional';
+    }
+
+    function renderProgress() {
+      const progressList = byId('progress-list');
+      progressList.replaceChildren();
+      for (const section of form.querySelectorAll('.section')) {
+        const row = document.createElement('li');
+        const link = document.createElement('button');
+        const status = document.createElement('span');
+        link.type = 'button';
+        link.textContent = section.querySelector('h2').textContent.trim();
+        link.addEventListener('click', () => goToSection(section));
+        status.className = 'progress-status';
+        status.textContent = sectionStatus(section);
+        row.append(link, status);
+        progressList.append(row);
+      }
+    }
+
+    function showTab(tab) {
+      if (tab.getAttribute('aria-selected') === 'true') return;
+      const isGeneral = tab === generalTab;
+      if (!isGeneral) {
+        generalScrollTop = scroller.scrollTop;
+        renderProgress();
+      }
+      generalTab.setAttribute('aria-selected', String(isGeneral));
+      progressTab.setAttribute('aria-selected', String(!isGeneral));
+      generalTab.tabIndex = isGeneral ? 0 : -1;
+      progressTab.tabIndex = isGeneral ? -1 : 0;
+      byId('general-panel').hidden = !isGeneral;
+      byId('progress-panel').hidden = isGeneral;
+      scroller.scrollTop = isGeneral ? generalScrollTop : 0;
+    }
+
+    function goToSection(section) {
+      showTab(generalTab);
+      const heading = section.querySelector('h2');
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+      section.scrollIntoView({ block: 'start' });
+    }
+
+    form.addEventListener('submit', (event) => event.preventDefault());
+    byId('business-unit').addEventListener('change', updateBusinessUnit);
+    byId('start-date').addEventListener('input', (event) => {
+      byId('end-date').min = event.target.value;
+    });
+    for (const toggle of form.querySelectorAll('.switch')) {
+      const updateSwitch = () => {
+        toggle.nextElementSibling.textContent = toggle.checked ? 'Yes' : 'No';
+      };
+      toggle.addEventListener('change', updateSwitch);
+      updateSwitch();
+    }
+
+    for (const vendor of vendors) vendorSelect.add(new Option(vendorLabel(vendor), vendor.id));
+    vendorSelect.addEventListener('change', updateVendorSummary);
+    byId('open-vendor').addEventListener('click', () => {
+      vendorSearch.value = '';
+      renderVendorResults();
+      vendorDialog.showModal();
+    });
+    byId('close-vendor').addEventListener('click', () => vendorDialog.close());
+    vendorSearch.addEventListener('input', renderVendorResults);
+
+    for (const tab of [generalTab, progressTab]) {
+      tab.addEventListener('click', () => showTab(tab));
+      tab.addEventListener('keydown', (event) => {
+        const destinations = { ArrowLeft: tab === generalTab ? progressTab : generalTab, ArrowRight: tab === generalTab ? progressTab : generalTab, Home: generalTab, End: progressTab };
+        const destination = destinations[event.key];
+        if (!destination) return;
+        event.preventDefault();
+        showTab(destination);
+        destination.focus();
+      });
+    }
+
+    const navToggle = byId('toggle-nav');
+    const compactLayout = matchMedia('(max-width: 800px)');
+    function setNavigationCollapsed(collapsed) {
+      byId('sidebar').classList.toggle('is-collapsed', collapsed);
+      navToggle.setAttribute('aria-expanded', String(!collapsed));
+      navToggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+    }
+    setNavigationCollapsed(compactLayout.matches);
+    compactLayout.addEventListener('change', (event) => setNavigationCollapsed(event.matches));
+    navToggle.addEventListener('click', () => setNavigationCollapsed(navToggle.getAttribute('aria-expanded') === 'true'));
+    for (const link of byId('sidebar-links').querySelectorAll('a')) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        goToSection(byId('assessment-details'));
+      });
+    }
+  </script>
+  <script>
+(() => {
+  'use strict';
+
+  const sampleNames = ['Engagement Contract.pdf', 'Statement of Work.docx', 'Continuity Appendix.pdf'];
+  const evidence = (doc, clause, text) => ({ doc, clause, text });
+  const questions = [
+    { id: 'ENG-001', field: 'third-party-category', group: 'Engagement', title: 'Third Party Category', answer: 'Supplier / Vendor',
+      evidence: evidence(0, '§1.1 · p. 2', 'Demo Cloud Services Ltd. is engaged as an independent supplier to provide the services described in the Statement of Work.'),
+      why: 'The agreement identifies Demo Cloud Services as a supplier for this engagement.' },
+    { id: 'ENG-002', field: 'agreement-type', group: 'Engagement', title: 'Type of Agreement', answer: 'Service Agreement',
+      evidence: evidence(0, 'Cover · p. 1', 'Third Party Service Agreement between AIA Hong Kong & Macau and Demo Cloud Services Ltd.'),
+      why: 'The agreement is titled Third Party Service Agreement.' },
+    { id: 'ENG-003', field: 'contract-value', group: 'Engagement', title: 'Estimated Contract Value in USD', answer: '48000',
+      evidence: evidence(0, '§6.1 · p. 8', 'The fixed fee for the initial term is USD 48,000.'), why: 'The fixed fee for the initial term is stated in US dollars.' },
+    { id: 'ENG-004', field: 'start-date', group: 'Engagement', title: 'Proposed Contract Start Date', answer: '2027-01-01',
+      evidence: evidence(0, '§2.1 · p. 3', 'The initial term starts on 1 January 2027 and ends on 31 December 2027.'),
+      why: 'The term clause gives 1 January 2027 as the start date.' },
+    { id: 'ENG-005', field: 'end-date', group: 'Engagement', title: 'Proposed Contract End Date', answer: '2027-12-31',
+      evidence: evidence(0, '§2.1 · p. 3', 'The initial term starts on 1 January 2027 and ends on 31 December 2027.'),
+      why: 'The term clause gives 31 December 2027 as the end date.' },
+    { id: 'ENG-006', field: 'description', group: 'Engagement', title: 'Engagement Description', answer: 'Demo Cloud Services will maintain and support the Group Technology reporting dashboard, including scheduled updates and business-hours incident support.',
+      evidence: evidence(1, '§2 · p. 2', 'The supplier will maintain the Group Technology reporting dashboard, perform scheduled updates, and provide business-hours incident support.'),
+      why: 'The description summarises the contracted services in the Statement of Work.' },
+    { id: 'TPSA-001', field: 'system-access', group: 'DPIA / TPSA', title: 'AIA system access or technology services', answer: 'Yes',
+      evidence: evidence(1, '§3.1 · p. 3', 'Supplier support staff require approved access to the AIA reporting environment for maintenance and incident resolution.'),
+      why: 'The support scope explicitly requires access to an AIA reporting environment.' },
+    { id: 'DPIA-001', field: 'confidential-data', group: 'DPIA / TPSA', title: 'Handling AIA confidential data', answer: 'Yes',
+      evidence: evidence(1, '§3.2 · p. 3', 'The support scope permits handling of confidential production exports where required for incident diagnosis.'),
+      why: 'The Statement of Work permits handling confidential production exports. The recommendation assumes that permission is relevant to the current scope.',
+      followUp: 'Check whether production exports are in the agreed scope. If the supplier handles synthetic test data only, confirm that with the engagement owner before choosing No in TPMS.' },
+    { id: 'OUT-001', field: 'delegated-operation', group: 'Outsourcing', title: 'Delegated recurring operation', answer: 'Yes',
+      evidence: evidence(1, '§2.3 · p. 2', 'The supplier will carry out the weekly dashboard maintenance previously performed by Group Technology.'), why: 'The work is recurring and was previously performed by AIA. This is a demo interpretation of the questionnaire criterion.' },
+    { id: 'BCM-001', field: 'continuity-impact', group: 'BCM', title: 'Impact on essential business functions', answer: null,
+      evidence: evidence(2, '§2 · p. 2', 'Support is available during local business hours. Service interruption is logged and escalated to the engagement owner.'),
+      why: 'The appendix describes escalation but gives no business impact assessment or information about essential dependencies.',
+      followUp: 'Ask the engagement owner which essential functions depend on the dashboard and whether a manual fallback exists. Use that confirmation to answer the question in TPMS.' }
+  ];
+
+  const panel = byId('tpms-assistant');
+  const body = byId('tpms-panel-body');
+  const chatForm = byId('tpms-chat-form');
+  const input = byId('tpms-chat-input');
+  const contextChip = byId('tpms-question-context');
+  const analysisStatus = byId('tpms-analysis-status');
+  const fileInput = byId('tpms-document-input');
+  const uploadList = byId('tpms-upload-list');
+  const uploadStatus = byId('tpms-upload-status');
+  const launch = byId('tpms-launch');
+  const fields = new Map(questions.map((question) => [question.field, byId(question.field)]));
+  const byQuestionId = new Map(questions.map((question) => [question.id, question]));
+  const editedSwitches = new WeakSet();
+  const assistantWrites = new Map();
+  const reportKey = 'tpms-assistant-demo:reports:v2';
+  const legacyKey = 'tpms-assistant-demo:report:v1';
+  const isReviewer = () => location.hash === '#reviewer';
+  const state = { tab: isReviewer() ? 'reports' : 'chat', batch: null, reports: [], context: null, messages: [] };
+
+  const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  const escape = (value) => String(value).replace(/[&<>"']/g, (character) => entities[character]);
+  const answerLabel = (question) => question.answer === null ? 'No suggestion' :
+    question.field === 'contract-value' ? 'USD ' + Number(question.answer).toLocaleString('en-US') : question.answer;
+  const citation = (question) => sampleNames[question.evidence.doc] + ' · ' + question.evidence.clause;
+  const button = (label, action, { key = '', primary = false, small = false } = {}) =>
+    `<button type="button" class="${small ? 'tpms-text-button' : 'tpms-btn'}${primary ? ' tpms-primary' : ''}" data-action="${action}"${key ? ` data-key="${escape(key)}"` : ''}>${escape(label)}</button>`;
+  const announce = (text) => { byId('tpms-announcement').textContent = text; };
+
+  const validFiles = (files) => Array.isArray(files) && files.length && files.every((name) => typeof name === 'string');
+  function readArchive(raw) {
+    if (!raw) return { reports: [], active: null };
+    try {
+      const data = JSON.parse(raw);
+      const reports = Array.isArray(data.reports) ? data.reports.filter((report) =>
+        typeof report?.id === 'string' && typeof report?.date === 'number' && validFiles(report.files)) : [];
+      return { reports, active: data.active };
+    } catch {
+      return { reports: [], active: null };
+    }
+  }
+
+  function makeReadyBatch(report) {
+    return { id: report.id, files: report.files, phase: 'ready', filled: new Set(), feedback: '' };
+  }
+
+  function restoreArchive() {
+    try {
+      const archive = readArchive(localStorage.getItem(reportKey));
+      state.reports = archive.reports;
+      const active = archive.reports.find((report) => report.id === archive.active);
+      if (active) {
+        state.batch = makeReadyBatch(active);
+        state.messages.push({ kind: 'result', batch: state.batch });
+      }
+      const oldFiles = JSON.parse(localStorage.getItem(legacyKey) || 'null');
+      if (validFiles(oldFiles) && !state.reports.some((report) => report.id === 'legacy-report')) {
+        state.reports.push({ id: 'legacy-report', files: oldFiles, date: 0 });
+      }
+    } catch {
+      // The demo also works with in-memory reports when storage is unavailable.
+    }
+  }
+
+  function saveArchive(active) {
+    try {
+      const existing = readArchive(localStorage.getItem(reportKey)).reports;
+      const merged = new Map(existing.map((report) => [report.id, report]));
+      for (const report of state.reports) merged.set(report.id, report);
+      state.reports = [...merged.values()];
+      localStorage.setItem(reportKey, JSON.stringify({ active, reports: state.reports }));
+    } catch {
+      // The reviewer can still open the report in the current tab.
+    }
+  }
+
+  function setPanel(open) {
+    panel.hidden = !open;
+    launch.setAttribute('aria-expanded', String(open));
+  }
+
+  function renderUpload() {
+    const files = state.batch?.files || [];
+    const reviewer = isReviewer();
+    byId('tpms-upload-actions').hidden = reviewer;
+    byId('tpms-sample-documents').disabled = sampleNames.every((name) => files.includes(name));
+    uploadList.hidden = !files.length;
+    uploadList.innerHTML = files.map((name) => `<li><span>${escape(name)}</span>${reviewer ? '' :
+      `<button type="button" class="tpms-close" data-action="remove" data-key="${escape(name)}" aria-label="Remove ${escape(name)}">×</button>`}</li>`).join('');
+    uploadStatus.textContent = ({
+      pending: 'Documents added · awaiting confirmation',
+      paused: 'Documents added · analysis paused',
+      analysing: 'Analysing documents…',
+      ready: 'Analysis complete · sample evidence'
+    })[state.batch?.phase] || 'Demo analysis uses sample evidence.';
+  }
+
+  function renderStatus() {
+    const phase = state.batch?.phase;
+    const labels = {
+      pending: 'View analysis prompt',
+      paused: 'Analyse uploaded documents',
+      analysing: 'Analysing documents',
+      ready: 'Analysis complete'
+    };
+    const label = labels[phase];
+    if (phase === 'analysing') {
+      analysisStatus.innerHTML = `<span class="tpms-status-icon" role="img" aria-label="${label}" data-tip="${label}"><span class="tpms-spinner" aria-hidden="true"></span></span>`;
+    } else if (phase === 'ready') {
+      analysisStatus.innerHTML = `<span class="tpms-status-icon complete" role="img" aria-label="${label}" data-tip="${label}">✓</span>`;
+    } else if ((phase === 'pending' || phase === 'paused') && !isReviewer()) {
+      analysisStatus.innerHTML = `<button type="button" class="tpms-status-icon" data-action="${phase === 'pending' ? 'show-prompt' : 'analyse'}"
+        aria-label="${label}" data-tip="${label}"><span aria-hidden="true">▤</span></button>`;
+    } else {
+      analysisStatus.innerHTML = '';
+    }
+  }
+
+  function renderContext() {
+    contextChip.hidden = !state.context;
+    contextChip.innerHTML = state.context ? `<span>@${escape(state.context)}</span>
+      <button type="button" data-action="clear-context" aria-label="Remove question context">×</button>` : '';
+    input.placeholder = state.context ? 'Ask about this question…' : 'Ask the assistant…';
+  }
+
+  const groups = [
+    questions.filter((question) => question.group !== 'Engagement'),
+    questions.filter((question) => question.group === 'Engagement')
+  ];
+  function questionList(entries, scope, { ask, fill, filled }) {
+    return `<ul class="tpms-question-list">${entries.map((question) => {
+      const key = scope + '-' + question.id;
+      const summary = question.field === 'description' ? 'Draft text' : answerLabel(question);
+      return `<li><details class="tpms-question" data-detail="${escape(key)}">
+        <summary><span class="tpms-question-title">${escape(question.title)}</span><span class="tpms-question-answer">${escape(summary)}</span></summary>
+        <div class="tpms-question-content">
+          <p class="tpms-muted">${question.id}${question.field === 'description' ? ' · ' + escape(question.answer) : ''}</p>
+          <p>${escape(question.why)}</p>
+          <details class="tpms-evidence" data-detail="${escape(key)}-evidence">
+            <summary>Evidence · ${escape(citation(question))}</summary>
+            <blockquote>${escape(question.evidence.text)}</blockquote>
+          </details>
+          ${ask || (fill && question.answer !== null) ? `<div class="tpms-msg-actions">
+            ${ask ? button('Ask AI', 'mention', { key: question.id }) : ''}
+            ${fill && question.answer !== null ? filled.has(question.id) ? '<span class="tpms-muted">Filled ✓</span>' :
+              button('Fill answer', 'fill-one', { key: question.id }) : ''}</div>` : ''}
+        </div></details></li>`;
+    }).join('')}</ul>`;
+  }
+
+  function questionGroups(scope, options) {
+    return `${questionList(groups[0], scope, options)}
+      <details class="tpms-more" data-detail="${escape(scope)}-more"><summary>Engagement details (${groups[1].length})</summary>
+        ${questionList(groups[1], scope, options)}</details>`;
+  }
+
+  function renderResult(batch) {
+    const active = batch === state.batch && batch.phase === 'ready';
+    const fill = active && !isReviewer();
+    return `<section class="tpms-message-card tpms-result-card" aria-label="Suggested answers">
+      <h3>Suggested answers</h3>
+      <p class="tpms-muted">${batch.files.length} document${batch.files.length === 1 ? '' : 's'} · Sample contract evidence</p>
+      ${fill ? `<div class="tpms-msg-actions">${button('Fill all suggested answers', 'fill-all', { primary: true })}</div>` : ''}
+      ${batch.feedback ? `<p class="tpms-muted" role="status">${escape(batch.feedback)}</p>` : ''}
+      ${questionGroups('chat-' + batch.id, { ask: active, fill, filled: batch.filled })}
+    </section>`;
+  }
+
+  function renderPrompt(batch) {
+    const pending = batch === state.batch && batch.phase === 'pending';
+    const names = batch.files.map(escape).join(', ');
+    return `<section class="tpms-message-card"${pending ? ' id="tpms-current-prompt" tabindex="-1"' : ''}>
+      <h3>Contract documents added</h3><p class="tpms-muted">${names}</p>
+      <p>Would you like me to analyse these documents and suggest answers for the TPMS form?</p>
+      ${pending && !isReviewer() ? `<div class="tpms-msg-actions">
+        ${button('Analyse documents', 'analyse', { primary: true })}${button('Not now', 'decline')}</div>` : ''}
+    </section>`;
+  }
+
+  function renderChat() {
+    const welcome = `<section class="tpms-message-card" aria-label="TPM Assistant">
+      <p>Upload contract documents in TPMS and I can help you answer the form.</p>
+      ${isReviewer() ? '' : `<p class="tpms-doc-hint">${button('Go to contract documents', 'documents', { small: true })}</p>`}
+    </section>`;
+    return `<div class="tpms-chat">${welcome}${state.messages.map((message) => {
+      if (message.kind === 'upload') return renderPrompt(message.batch);
+      if (message.kind === 'result') return renderResult(message.batch);
+      return `<div class="tpms-message${message.user ? ' user' : ''}" aria-label="${message.user ? 'You' : 'TPM Assistant'}">${message.context ?
+        `<span class="tpms-message-context">@${escape(message.context)}</span>` : ''}${escape(message.text)}</div>`;
+    }).join('')}</div>`;
+  }
+
+  function renderReports() {
+    const reports = [...state.reports].sort((a, b) => b.date - a.date);
+    return `<h3>AI suggestion reports</h3>${reports.length ? `<ul class="tpms-report-list">${reports.map((report) => {
+      const name = escape(report.files[0]);
+      const count = report.files.length - 1;
+      return `<li><details data-detail="report-${escape(report.id)}">
+        <summary class="tpms-report-summary"><span class="tpms-question-title">${name}${count ? ' +' + count : ''}</span></summary>
+        <div class="tpms-report-content"><p class="tpms-muted">${report.date ? escape(new Date(report.date).toLocaleString('en-GB')) + ' · ' : ''}${report.files.map(escape).join(', ')}</p>
+          ${questionGroups('report-' + report.id, { ask: false, fill: false })}
+        </div></details></li>`;
+    }).join('')}</ul>` : '<p class="tpms-muted">Reports appear here after documents are analysed.</p>'}`;
+  }
+
+  function render({ end = false, top = false } = {}) {
+    const previousScroll = body.scrollTop;
+    const expanded = new Set(Array.from(body.querySelectorAll('details[open][data-detail]'), (item) => item.dataset.detail));
+    const reviewer = isReviewer();
+    const reports = reviewer && state.tab === 'reports';
+    byId('tpms-new-chat').hidden = reviewer;
+    byId('tpms-reviewer-tabs').hidden = !reviewer;
+    byId('tpms-chat-tab').setAttribute('aria-pressed', String(!reports));
+    byId('tpms-reports-tab').setAttribute('aria-pressed', String(reports));
+    chatForm.hidden = reports;
+    body.setAttribute('aria-label', reports ? 'AI suggestion reports' : 'Assistant conversation');
+    body.innerHTML = reports ? renderReports() : renderChat();
+    for (const detail of body.querySelectorAll('details[data-detail]')) detail.open = expanded.has(detail.dataset.detail);
+    body.scrollTop = top ? 0 : end ? body.scrollHeight : previousScroll;
+    renderContext();
+    renderStatus();
+    renderUpload();
+    for (const question of questions) byId('tpms-ask-' + question.id).hidden = state.batch?.phase !== 'ready';
+  }
+
+  function goToDocuments() {
+    showTab(generalTab);
+    if (matchMedia('(max-width: 720px)').matches) setPanel(false);
+    byId('tpms-upload').scrollIntoView({ block: 'center' });
+    byId('tpms-pick-documents').focus({ preventScroll: true });
+  }
+
+  function selectTab(tab) {
+    state.tab = tab;
+    setPanel(true);
+    render({ top: true });
+  }
+
+  let timer;
+  function newChat() {
+    if (isReviewer()) return;
+    clearTimeout(timer);
+    for (const [field, { before, written, wasEdited }] of assistantWrites) {
+      if (readField(field) !== written) continue;
+      writeField(field, before);
+      if (!wasEdited) editedSwitches.delete(field);
+    }
+    assistantWrites.clear();
+    state.batch = null;
+    state.context = null;
+    state.messages = [];
+    input.value = '';
+    fileInput.value = '';
+    saveArchive(null);
+    selectTab('chat');
+    input.focus();
+    announce('New chat started. Upload contract documents in TPMS to begin.');
+  }
+
+  function changeDocuments(names) {
+    if (isReviewer()) return;
+    const files = [...new Set(names)];
+    const previous = state.batch?.files || [];
+    if (files.length === previous.length && files.every((name, index) => name === previous[index])) return;
+    clearTimeout(timer);
+    if (state.batch && state.batch.phase !== 'ready') state.batch.phase = 'replaced';
+    state.context = null;
+    state.batch = files.length ? {
+      id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+      files, phase: 'pending', filled: new Set(), feedback: ''
+    } : null;
+    saveArchive(null);
+    if (state.batch) {
+      state.messages.push({ kind: 'upload', batch: state.batch });
+      setPanel(true);
+      announce('Documents added. Confirm in the assistant to start analysis.');
+    }
+    render({ end: true });
+  }
+
+  function analyse() {
+    const batch = state.batch;
+    if (isReviewer() || !batch || !['pending', 'paused'].includes(batch.phase)) return;
+    batch.phase = 'analysing';
+    state.messages.push({ user: true, text: 'Analyse documents' });
+    render({ end: true });
+    timer = setTimeout(() => {
+      if (state.batch !== batch) return;
+      batch.phase = 'ready';
+      state.reports.push({ id: batch.id, date: Date.now(), files: batch.files });
+      state.messages.push({ kind: 'result', batch });
+      saveArchive(batch.id);
+      announce('Analysis complete. Suggested answers are available in the chat.');
+      render({ end: state.tab === 'chat' });
+    }, 1100);
+  }
+
+  function decline() {
+    if (isReviewer() || state.batch?.phase !== 'pending') return;
+    state.batch.phase = 'paused';
+    state.messages.push({ user: true, text: 'Not now' }, { text: 'Analysis is paused. Use the document icon above whenever you’re ready.' });
+    render({ end: true });
+    byId('tpms-analysis-status').querySelector('button')?.focus({ preventScroll: true });
+  }
+
+  function mention(id) {
+    if (!byQuestionId.has(id) || state.batch?.phase !== 'ready') return;
+    const fromReports = state.tab === 'reports';
+    state.tab = 'chat';
+    state.context = id;
+    setPanel(true);
+    if (fromReports) render({ end: true });
+    else renderContext();
+    input.focus({ preventScroll: true });
+  }
+
+  function send() {
+    const raw = input.value.trim();
+    if (!raw) return;
+    input.value = '';
+    const prefix = raw.match(/^@([A-Z]+)-(\d{2,3})\b\s*/i);
+    const typedId = prefix ? prefix[1].toUpperCase() + '-' + prefix[2].padStart(3, '0') : '';
+    const hasTypedContext = byQuestionId.has(typedId);
+    if (hasTypedContext && state.batch?.phase === 'ready') state.context = typedId;
+    const text = hasTypedContext && state.context === typedId ? raw.slice(prefix[0].length) : raw;
+    if (!text) {
+      renderContext();
+      input.focus();
+      return;
+    }
+    if (!state.context && state.batch?.phase === 'pending' && /^(yes|analyse|analyze|是|解析)[.!。！]?$/i.test(text)) {
+      analyse();
+      return;
+    }
+    if (!state.context && state.batch?.phase === 'pending' && /^(no|not now|later|否|不用|稍后)[.!。！]?$/i.test(text)) {
+      decline();
+      return;
+    }
+    const context = state.context;
+    const question = byQuestionId.get(context);
+    const requestsEvidence = /source|evidence|quote|clause|section|依据|证据|条款|来源|原文/i.test(text);
+    let reply = 'Select a question in the suggestions card or choose Ask AI next to its TPMS field.';
+    if (!state.batch || state.batch.phase !== 'ready') {
+      reply = state.batch ? 'Once the documents are analysed, I can answer questions about the TPMS fields.' :
+        'Upload a contract in TPMS to get suggested answers and evidence.';
+    } else if (question) {
+      reply = requestsEvidence ? citation(question) + '\n“' + question.evidence.text + '”' :
+        /what|confirm|scope|clarif|确认|范围|怎么办/i.test(text) && question.followUp ? question.followUp : question.why;
+    }
+    state.messages.push({ user: true, text, context }, { text: reply, context });
+    render({ end: true });
+    announce(reply);
+    input.focus();
+  }
+
+  const readField = (field) => field.type === 'checkbox' ? field.checked : field.value;
+  function writeField(field, value) {
+    if (field.type === 'checkbox') field.checked = value;
+    else field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function fillAnswer(question, keepExisting) {
+    const field = fields.get(question.field);
+    if (!field || question.answer === null || field.disabled || field.readOnly) return false;
+    const isSwitch = field.type === 'checkbox';
+    if (keepExisting && (isSwitch ? field.checked || editedSwitches.has(field) : field.value.trim())) return false;
+    if (field.tagName === 'SELECT' && !Array.from(field.options).some((option) => option.value === question.answer && !option.disabled)) return false;
+    const before = readField(field);
+    const wasEdited = editedSwitches.has(field);
+    const prior = assistantWrites.get(field);
+    const written = isSwitch ? question.answer === 'Yes' : question.answer;
+    writeField(field, written);
+    if (readField(field) !== written) return false;
+    assistantWrites.set(field, prior?.written === before ? { ...prior, written } : { before, written, wasEdited });
+    return true;
+  }
+
+  function fill(answers, keepExisting) {
+    const batch = state.batch;
+    if (isReviewer() || batch?.phase !== 'ready') return;
+    const filled = answers.filter((question) => fillAnswer(question, keepExisting));
+    for (const question of filled) batch.filled.add(question.id);
+    if (filled.length) showTab(generalTab);
+    batch.feedback = filled.length ? `Filled ${filled.length} TPMS answer${filled.length === 1 ? '' : 's'}.` : 'No additional answers were filled.';
+    render();
+    announce(batch.feedback);
+  }
+
+  const actions = {
+    open: () => { setPanel(true); body.focus(); },
+    close: () => { setPanel(false); launch.focus(); },
+    'new-chat': newChat,
+    documents: goToDocuments,
+    pick: () => { if (!isReviewer()) fileInput.click(); },
+    samples: () => changeDocuments([...(state.batch?.files || []), ...sampleNames]),
+    remove: (name) => changeDocuments((state.batch?.files || []).filter((file) => file !== name)),
+    analyse,
+    decline,
+    'show-prompt': () => {
+      const prompt = byId('tpms-current-prompt');
+      prompt?.scrollIntoView({ block: 'nearest' });
+      prompt?.focus({ preventScroll: true });
+    },
+    mention,
+    'clear-context': () => { state.context = null; renderContext(); input.focus(); },
+    'fill-all': () => fill(questions, true),
+    'fill-one': (id) => { const question = byQuestionId.get(id); if (question) fill([question], false); },
+    'chat-tab': () => selectTab('chat'),
+    'reports-tab': () => { if (isReviewer()) selectTab('reports'); }
+  };
+
+  for (const question of questions) {
+    const field = fields.get(question.field);
+    const container = field.closest('.field, .question');
+    container.insertAdjacentHTML('beforeend', `<div class="tpms-field-ask" id="tpms-ask-${question.id}" hidden>
+      <button type="button" class="tpms-text-button" data-action="mention" data-key="${question.id}"
+        aria-label="Ask AI about ${escape(question.title)}">Ask AI</button></div>`);
+    const releaseAssistantWrite = (event) => { if (event.isTrusted) assistantWrites.delete(field); };
+    field.addEventListener('input', releaseAssistantWrite);
+    field.addEventListener('change', (event) => {
+      releaseAssistantWrite(event);
+      if (field.type === 'checkbox') editedSwitches.add(field);
+    });
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files).map((file) => file.name).filter((name) => /\.(pdf|docx)$/i.test(name));
+    changeDocuments([...(state.batch?.files || []), ...files]);
+    fileInput.value = '';
+    if (!files.length) uploadStatus.textContent = 'Choose a PDF or DOCX file.';
+  });
+  chatForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    send();
+  });
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-action]');
+    if (target && !target.disabled && Object.hasOwn(actions, target.dataset.action)) actions[target.dataset.action](target.dataset.key);
+  });
+  window.addEventListener('hashchange', () => selectTab(isReviewer() ? 'reports' : 'chat'));
+  window.addEventListener('storage', (event) => {
+    if (event.key !== reportKey || !isReviewer()) return;
+    const archive = readArchive(event.newValue);
+    const legacy = state.reports.filter((report) => report.id === 'legacy-report' && !archive.reports.some((item) => item.id === report.id));
+    state.reports = [...archive.reports, ...legacy];
+    const active = archive.reports.find((report) => report.id === archive.active);
+    if (active?.id !== state.batch?.id && (!state.batch || state.batch.phase === 'ready')) {
+      state.context = null;
+      state.batch = active ? makeReadyBatch(active) : null;
+      if (state.batch) state.messages.push({ kind: 'result', batch: state.batch });
+    }
+    render();
+  });
+  restoreArchive();
+  render();
+})();
+  </script>
+</body>
+</html>

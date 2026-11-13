@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New TPM Engagement | AIA Third Party Management System</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --shell: #331831;
+      --canvas: #f3f2f1;
+      --surface: #fff;
+      --line: #e5e3e1;
+      --field: #f2f2f2;
+      --text: #242424;
+      --muted: #605e5c;
+      --red: #a50032;
+      --blue: #245684;
+      font: 14px/1.4 "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: 48px minmax(0, 1fr);
+      color: var(--text);
+      background: var(--canvas);
+    }
+    [hidden] { display: none !important; }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(max-content, 1fr) minmax(160px, 32%) minmax(90px, 1fr);
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      color: white;
+      background: var(--shell);
+    }
+    .app-name, .top-actions { display: flex; align-items: center; gap: 13px; white-space: nowrap; }
+    .power-apps { border-right: 1px solid #765c72; padding-right: 13px; font-weight: 600; }
+    .waffle {
+      width: 15px;
+      height: 15px;
+      background: radial-gradient(circle, currentColor 1px, transparent 1.4px) 0 0 / 5px 5px;
+    }
+    .search-shell {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 2px;
+      color: #413541;
+      background: #eee9ee;
+    }
+    .search-icon {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      margin: 0 3px 3px 0;
+      border: 1.4px solid currentColor;
+      border-radius: 50%;
+      position: relative;
+      flex: none;
+    }
+    .search-icon::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 5px;
+      height: 1px;
+      background: currentColor;
+      transform: rotate(45deg);
+      transform-origin: left;
+    }
+    .top-actions { justify-content: end; font-size: 17px; }
+    .avatar { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #a992a5; border-radius: 50%; font-size: 11px; }
+    .workspace { display: flex; min-height: 0; }
+    .sidebar {
+      width: 164px;
+      flex: none;
+      background: #f5f4f3;
+      border-right: 1px solid #dedcd9;
+      padding: 6px 0;
+    }
+    .sidebar.is-collapsed { width: 44px; }
+    .sidebar.is-collapsed .nav-label, .sidebar.is-collapsed .nav-group { display: none; }
+    .nav-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 38px;
+      padding: 0 12px;
+      white-space: nowrap;
+      color: inherit;
+      text-decoration: none;
+    }
+    .nav-row:hover { background: #eae8e6; }
+    .nav-icon { display: inline-grid; place-items: center; width: 19px; flex: none; font-size: 17px; }
+    .menu-button { width: 100%; background: transparent; border: 0; cursor: pointer; }
+    .nav-group { margin: 12px 12px 3px; font-weight: 600; }
+    .record { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+    .record-header { padding: 7px 12px 0; }
+    .toolbar, .record-heading, .section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px #00000012;
+    }
+    .toolbar { display: flex; align-items: center; gap: 6px; min-height: 43px; padding: 4px 9px; margin-bottom: 10px; }
+    .toolbar button, .form-assist, .lookup-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 8px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      white-space: nowrap;
+    }
+    .toolbar button:disabled, .form-assist:disabled { color: #545250; }
+    .toolbar button:first-child { border-right-color: var(--line); border-radius: 0; }
+    .record-heading h1 {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 0;
+      padding: 17px 15px 18px;
+      font-size: 19px;
+      font-weight: 600;
+    }
+    .home-icon { color: var(--red); font-size: 22px; line-height: 1; }
+    .tabs { display: flex; align-items: end; gap: 17px; min-height: 41px; padding: 0 11px; }
+    .tab {
+      align-self: stretch;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      padding: 8px 0 7px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] { border-color: var(--blue); font-weight: 600; }
+    .form-assist { margin: 0 0 3px auto; border-color: var(--line); }
+    .form-scroll { flex: 1; min-height: 0; overflow: auto; padding: 10px 12px 18px; }
+    .section { margin: 0 0 12px; scroll-margin-top: 10px; }
+    .section h2 {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid #efeeed;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .section-number {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      color: white;
+      background: var(--red);
+      font-size: 12px;
+    }
+    .section-body { padding: 10px 12px 13px; }
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 19px; }
+    .field { min-width: 0; }
+    .field > label, .question > label { display: block; margin-bottom: 5px; }
+    .full-width { grid-column: 1 / -1; }
+    .first-column { grid-column: 1; }
+    .compact { max-width: 1060px; }
+    .short { max-width: 515px; }
+    .control {
+      display: block;
+      width: 100%;
+      min-height: 33px;
+      padding: 5px 10px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      color: var(--text);
+      background: var(--field);
+    }
+    .control:enabled:not([readonly]):hover { border-color: #a9a6a3; }
+    .control:enabled:focus-visible { outline-offset: 0; }
+    .control:disabled, .control[readonly] { opacity: 1; background: #ebebeb; color: var(--muted); }
+    select.control:enabled, input[type="date"]:enabled { cursor: pointer; }
+    textarea.control { min-height: 122px; resize: vertical; }
+    .required { margin-left: 3px; color: #9f2635; }
+    .lock {
+      position: relative;
+      display: inline-block;
+      width: 9px;
+      height: 7px;
+      margin-left: 5px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      color: var(--muted);
+    }
+    .lock::before { content: ""; position: absolute; left: 1px; top: -5px; width: 3px; height: 4px; border: 1px solid currentColor; border-radius: 3px 3px 0 0; }
+    .hint-icon { margin-left: 5px; color: var(--muted); font-size: 12px; }
+    .notice {
+      margin: 14px 0 0;
+      padding: 12px 16px;
+      border-radius: 3px;
+      background: #f7f7f7;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .notice p { margin: 0; }
+    .notice p + p { margin-top: 6px; }
+    .portal-name { text-decoration: underline; color: #304d62; }
+    .vendor-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 17px; }
+    .vendor-row { display: flex; align-items: center; gap: 6px; }
+    .vendor-row .control { min-width: 0; }
+    .lookup-button { min-height: 33px; flex: none; border-color: #d4d2cf; background: white; cursor: pointer; }
+    .lookup-button:hover { background: #f5f4f3; }
+    .vendor-summary {
+      min-height: 84px;
+      margin: 0;
+      padding: 12px;
+      background: #f7f7f7;
+      color: var(--muted);
+      border-radius: 3px;
+    }
+    .question + .question { margin-top: 14px; }
+    .switch-row { display: inline-flex; align-items: center; gap: 9px; color: var(--muted); }
+    .switch {
+      appearance: none;
+      width: 36px;
+      height: 19px;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      background: #fff;
+      border: 1px solid #9a9998;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 11px; height: 11px; border-radius: 50%; background: #777675; }
+    .switch:checked { background: var(--blue); border-color: var(--blue); }
+    .switch:checked::before { left: 20px; background: white; }
+    .switch-value { min-width: 23px; }
+    dialog { width: min(500px, calc(100% - 28px)); border: 1px solid var(--line); border-radius: 5px; padding: 0; color: var(--text); box-shadow: 0 12px 40px #0004; }
+    dialog::backdrop { background: #0005; }
+    .dialog-heading { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+    .dialog-heading h2 { margin: 0; font-size: 16px; }
+    .dialog-close { border: 0; background: transparent; font-size: 22px; cursor: pointer; }
+    .dialog-content { padding: 12px 16px 16px; }
+    .vendor-results { display: grid; gap: 3px; margin: 8px 0 0; }
+    .vendor-result { text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 2px; background: white; cursor: pointer; }
+    .vendor-result:hover { background: var(--field); }
+    .progress-list { margin: 0; padding: 0; list-style: none; }
+    .progress-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .progress-list li:last-child { border-bottom: 0; }
+    .progress-list button { padding: 0; border: 0; background: transparent; color: var(--blue); text-align: left; cursor: pointer; }
+    .progress-list button:hover { text-decoration: underline; }
+    .progress-status { color: var(--muted); text-align: right; }
+    @media (max-width: 800px) {
+      .power-apps, .top-actions { display: none; }
+      .topbar { grid-template-columns: minmax(0, 1fr) minmax(75px, 25%); }
+      .app-name { min-width: 0; }
+      .app-title { overflow: hidden; text-overflow: ellipsis; }
+    }
+    @media (max-width: 580px) {
+      .record-header { padding-inline: 6px; }
+      .form-scroll { padding-inline: 6px; }
+      .record-heading h1 { font-size: 16px; }
+      .fields, .vendor-layout { grid-template-columns: minmax(0, 1fr); }
+      .vendor-summary:empty { display: none; }
+      .form-assist { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="app-name">
+      <span class="waffle" aria-hidden="true"></span>
+      <span class="power-apps">Power Apps</span>
+      <span class="app-title">AIA Third Party Management System</span>
+    </div>
+    <div class="search-shell" aria-hidden="true"><span class="search-icon"></span> Search</div>
+    <div class="top-actions" aria-hidden="true"><span>＋</span><span>⚙</span><span>?</span><span class="avatar">DE</span></div>
+  </header>
+
+  <div class="workspace">
+    <nav id="sidebar" class="sidebar" aria-label="TPM navigation">
+      <button type="button" id="toggle-nav" class="nav-row menu-button" aria-label="Collapse navigation" aria-expanded="true" aria-controls="sidebar-links"><span class="nav-icon" aria-hidden="true">≡</span></button>
+      <div id="sidebar-links">
+        <a class="nav-row" href="#assessment-details" aria-label="Home"><span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-label">Home</span></a>
+        <div class="nav-group">TPM</div>
+        <a class="nav-row" href="#assessment-details" aria-label="LandingPage"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-label">LandingPage</span></a>
+      </div>
+    </nav>
+
+    <main class="record">
+      <div class="record-header">
+        <div class="toolbar" role="group" aria-label="Commands">
+          <button type="button" disabled aria-label="Back">←</button>
+          <button type="button" disabled><span aria-hidden="true">▣</span> Translate</button>
+          <button type="button" disabled><span aria-hidden="true">▤</span> Change Log</button>
+        </div>
+        <div class="record-heading">
+          <h1><span class="home-icon" aria-hidden="true">⌂</span> Home <span aria-hidden="true">&gt;</span> My Actions <span aria-hidden="true">&gt;</span> New TPM Engagement</h1>
+          <div class="tabs" role="tablist" aria-label="Engagement">
+            <button type="button" class="tab" id="general-tab" role="tab" aria-selected="true" aria-controls="general-panel">General Information</button>
+            <button type="button" class="tab" id="progress-tab" role="tab" aria-selected="false" aria-controls="progress-panel" tabindex="-1">Progress</button>
+            <button type="button" class="form-assist" disabled>Form assist</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-scroll" id="form-scroll">
+        <div id="general-panel" role="tabpanel" aria-labelledby="general-tab">
+          <form id="engagement-form" autocomplete="off">
+            <section class="section" id="assessment-details">
+              <h2><span class="section-number">1</span> Assessment Details</h2>
+              <div class="section-body">
+                <div class="field short">
+                  <label for="assessment-type">Assessment Type <span class="required" aria-hidden="true">*</span><span class="lock" aria-hidden="true"></span></label>
+                  <input id="assessment-type" name="assessmentType" class="control" value="Engagement Level (Default)" readonly>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="engaging-entity">
+              <h2><span class="section-number">2</span> Engaging Entity Information</h2>
+              <div class="section-body fields">
+                <div class="field">
+                  <label for="business-unit">Business Unit <span class="required" aria-hidden="true">*</span></label>
+                  <select id="business-unit" name="businessUnit" class="control" required>
+                    <option value="">--Select--</option>
+                    <option>AIA Australia</option>
+                    <option>AIA Blue Cross</option>
+                    <option>AIA Cambodia</option>
+                    <option>AIA China</option>
+                    <option>AIA Global Insurance Limited</option>
+                    <option>AIA Group</option>
+                    <option>AIA Hong Kong &amp; Macau</option>
+                    <option>AIA Indonesia</option>
+                    <option>AIA IT Malaysia</option>
+                    <option>AIA Korea</option>
+                    <option>AIA Malaysia</option>
+                    <option>AIA Myanmar</option>
+                    <option>AIA New Zealand</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="legal-entity">AIA Legal Entity Name <span class="required" aria-hidden="true">*</span><span class="lock" aria-hidden="true"></span></label>
+                  <input id="legal-entity" name="legalEntity" class="control" readonly>
+                </div>
+                <div class="field">
+                  <label for="function-name">Function Name <span class="required" aria-hidden="true">*</span><span id="function-lock" class="lock" aria-hidden="true"></span></label>
+                  <select id="function-name" name="functionName" class="control" required disabled>
+                    <option value="">---</option>
+                    <option>Finance</option><option>Group Technology</option><option>Human Resources</option><option>Legal &amp; Compliance</option><option>Operations</option><option>Procurement</option><option>Risk</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="secondary-function">Secondary Function Name (If Applicable) <span id="secondary-function-lock" class="lock" aria-hidden="true"></span></label>
+                  <select id="secondary-function" name="secondaryFunction" class="control" disabled>
+                    <option value="">---</option>
+                    <option>Finance</option><option>Group Technology</option><option>Human Resources</option><option>Legal &amp; Compliance</option><option>Operations</option><option>Procurement</option><option>Risk</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="third-party-information">
+              <h2><span class="section-number">3</span> Third Party Information</h2>
+              <div class="section-body">
+                <div class="vendor-layout compact">
+                  <div class="field">
+                    <label for="third-party-name">Third Party Name <span class="required" aria-hidden="true">*</span></label>
+                    <div class="vendor-row">
+                      <select id="third-party-name" name="thirdPartyId" class="control" required><option value="">--Select--</option></select>
+                      <button type="button" id="open-vendor" class="lookup-button" aria-label="Look up a third party" title="Look up a third party"><span class="search-icon" aria-hidden="true"></span></button>
+                    </div>
+                  </div>
+                  <p class="vendor-summary" id="vendor-summary" role="status"></p>
+                </div>
+                <div class="notice">
+                  <p>If multiple IDs exist under the same vendor name, please consult with your local Finance team or GFS if you are unsure which to select.<br>Selecting an incorrect ID may result in delays in TPM completion and/or payment processing.</p>
+                  <p>GFS Contact: Raise a ticket via the <span class="portal-name">GFS Service Portal</span> (select 'Vendor Master Data Maintenance')</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="engagement-details">
+              <h2><span class="section-number">4</span> Engagement Details</h2>
+              <div class="section-body">
+                <div class="fields compact">
+                  <div class="field">
+                    <label for="third-party-category">Third Party Category <span class="required" aria-hidden="true">*</span></label>
+                    <select id="third-party-category" name="thirdPartyCategory" class="control" required>
+                      <option value="">--Select--</option>
+                      <option>Supplier / Vendor</option><option>Consultant</option><option>Business Partner</option><option>Intra-Group Service Provider</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="agreement-type">Type of Agreement</label>
+                    <select id="agreement-type" name="agreementType" class="control">
+                      <option value="">--Select--</option>
+                      <option>Master Services Agreement</option><option>Service Agreement</option><option>Statement of Work</option><option>Purchase Order</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="field first-column">
+                    <label for="contract-value">Estimated Contract Value in USD <span class="hint-icon" title="Enter the estimated total contract value in USD." aria-hidden="true">ⓘ</span></label>
+                    <input id="contract-value" name="contractValueUsd" class="control" type="number" min="0" step="0.01" inputmode="decimal">
+                  </div>
+                  <div class="field first-column">
+                    <label for="start-date">Proposed Contract Start Date <span class="required" aria-hidden="true">*</span></label>
+                    <input id="start-date" name="contractStartDate" class="control" type="date" required>
+                  </div>
+                  <div class="field">
+                    <label for="end-date">Proposed Contract End Date</label>
+                    <input id="end-date" name="contractEndDate" class="control" type="date">
+                  </div>
+                </div>
+                <div class="field" style="margin-top: 13px">
+                  <label for="description">Engagement Description <span class="required" aria-hidden="true">*</span></label>
+                  <textarea id="description" name="engagementDescription" class="control" aria-describedby="description-note" required></textarea>
+                </div>
+                <p class="notice" id="description-note">Please supplement the service description in English if your draft is in local language.</p>
+              </div>
+            </section>
+
+            <section class="section" id="privacy-and-security">
+              <h2><span class="section-number">5</span> Data Privacy &amp; Information Security Questions</h2>
+              <div class="section-body">
+                <div class="question">
+                  <label for="system-access">Will the Third Party have access to AIA systems or networks and/or provide technology services? <span class="required" aria-hidden="true">*</span></label>
+                  <div class="switch-row"><input id="system-access" name="systemAccess" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+                </div>
+                <div class="question">
+                  <label for="confidential-data">Will the Third Party handle AIA confidential and/or highly confidential data? <span class="required" aria-hidden="true">*</span></label>
+                  <div class="switch-row"><input id="confidential-data" name="confidentialData" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="outsourcing">
+              <h2><span class="section-number">6</span> Outsourcing Question</h2>
+              <div class="section-body question">
+                <label for="delegated-operation">Will the service provider be delegated the execution of a recurring operational role or service that AIA would otherwise perform itself? <span class="required" aria-hidden="true">*</span></label>
+                <div class="switch-row"><input id="delegated-operation" name="delegatedOperation" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+              </div>
+            </section>
+
+            <section class="section" id="business-continuity">
+              <h2><span class="section-number">7</span> Business Continuity Question</h2>
+              <div class="section-body question">
+                <label for="continuity-impact">Would the failure of this third-party service impact AIA’s ability to continue delivering essential business functions and meet obligations to customers, regulators, or internal business units/external partner organizations? <span class="required" aria-hidden="true">*</span></label>
+                <div class="switch-row"><input id="continuity-impact" name="continuityImpact" class="switch" type="checkbox" role="switch"><span class="switch-value" aria-hidden="true">No</span></div>
+              </div>
+            </section>
+
+            <section class="section" id="business-approver">
+              <h2><span class="section-number">8</span> Business Approver</h2>
+              <div class="section-body field">
+                <label for="approver">Please select a Business Approver for this engagement <span class="required" aria-hidden="true">*</span></label>
+                <select id="approver" name="businessApprover" class="control short" required>
+                  <option value="">--Select--</option>
+                  <option>Demo User – Business Operations</option><option>Demo User – Technology</option><option>Demo User – Finance</option>
+                </select>
+              </div>
+            </section>
+
+            <section class="section" id="secondary-owner">
+              <h2><span class="section-number">9</span> Secondary Contract Owner</h2>
+              <div class="section-body field">
+                <label for="contract-owner">Please select a Secondary Contract Owner for this engagement</label>
+                <select id="contract-owner" name="secondaryContractOwner" class="control short">
+                  <option value="">---</option>
+                  <option>Demo User – Business Operations</option><option>Demo User – Technology</option><option>Demo User – Finance</option>
+                </select>
+              </div>
+            </section>
+          </form>
+        </div>
+
+        <div id="progress-panel" role="tabpanel" aria-labelledby="progress-tab" tabindex="0" hidden>
+          <section class="section">
+            <h2>Engagement Progress</h2>
+            <div class="section-body"><ul class="progress-list" id="progress-list"></ul></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="vendor-dialog" aria-labelledby="vendor-dialog-title">
+    <div class="dialog-heading">
+      <h2 id="vendor-dialog-title">Look up Third Party</h2>
+      <button type="button" class="dialog-close" id="close-vendor" aria-label="Close vendor lookup">×</button>
+    </div>
+    <div class="dialog-content field">
+      <label for="vendor-search">Search by vendor name or ID</label>
+      <input id="vendor-search" class="control" type="search" autofocus>
+      <div id="vendor-results" class="vendor-results"></div>
+    </div>
+  </dialog>
+
+  <script>
+    const byId = (id) => document.getElementById(id);
+    const form = byId('engagement-form');
+    const scroller = byId('form-scroll');
+    const generalTab = byId('general-tab');
+    const progressTab = byId('progress-tab');
+    let generalScrollTop = 0;
+
+    // The business-unit list follows the screenshots. Other lookup values are demo data.
+    const vendors = [
+      { id: 'DEMO-1001', name: 'Demo Cloud Services Ltd.' },
+      { id: 'DEMO-1002', name: 'Demo Cloud Services Ltd.' },
+      { id: 'DEMO-2001', name: 'Demo Advisory Partners Ltd.' },
+      { id: 'DEMO-3001', name: 'Demo Facilities Services Ltd.' }
+    ];
+    const vendorLabel = (vendor) => vendor.name + ' (' + vendor.id + ')';
+    const vendorSelect = byId('third-party-name');
+    const vendorDialog = byId('vendor-dialog');
+    const vendorSearch = byId('vendor-search');
+
+    function updateBusinessUnit() {
+      const unit = byId('business-unit').value;
+      byId('legal-entity').value = unit ? unit + ' (Demo)' : '';
+      for (const [id, lockId] of [['function-name', 'function-lock'], ['secondary-function', 'secondary-function-lock']]) {
+        byId(id).value = '';
+        byId(id).disabled = !unit;
+        byId(lockId).hidden = Boolean(unit);
+      }
+    }
+
+    function updateVendorSummary() {
+      const vendor = vendors.find(({ id }) => id === vendorSelect.value);
+      byId('vendor-summary').textContent = vendor ? 'Selected vendor: ' + vendorLabel(vendor) : '';
+    }
+
+    function renderVendorResults() {
+      const query = vendorSearch.value.trim().toLowerCase();
+      const results = byId('vendor-results');
+      results.replaceChildren();
+      for (const vendor of vendors.filter((item) => vendorLabel(item).toLowerCase().includes(query))) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'vendor-result';
+        button.textContent = vendorLabel(vendor);
+        button.addEventListener('click', () => {
+          vendorSelect.value = vendor.id;
+          vendorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+          vendorDialog.close();
+          vendorSelect.focus();
+        });
+        results.append(button);
+      }
+      if (!results.childElementCount) {
+        const message = document.createElement('p');
+        message.textContent = 'No vendors found.';
+        results.append(message);
+      }
+    }
+
+    function sectionStatus(section) {
+      if (section.id === 'assessment-details') return 'Default selected';
+      const switches = Array.from(section.querySelectorAll('.switch'));
+      if (switches.length) return switches.map((field) => field.checked ? 'Yes' : 'No').join(' / ');
+      const requiredFields = Array.from(section.querySelectorAll('[required]'));
+      if (requiredFields.some((field) => !field.value.trim() || !field.validity.valid)) return 'Required fields incomplete';
+      if (section.querySelector(':invalid')) return 'Check entered values';
+      if (requiredFields.length) return 'Required fields complete';
+      return section.querySelector('select').value ? 'Selected' : 'Optional';
+    }
+
+    function renderProgress() {
+      const progressList = byId('progress-list');
+      progressList.replaceChildren();
+      for (const section of form.querySelectorAll('.section')) {
+        const row = document.createElement('li');
+        const link = document.createElement('button');
+        const status = document.createElement('span');
+        link.type = 'button';
+        link.textContent = section.querySelector('h2').textContent.trim();
+        link.addEventListener('click', () => goToSection(section));
+        status.className = 'progress-status';
+        status.textContent = sectionStatus(section);
+        row.append(link, status);
+        progressList.append(row);
+      }
+    }
+
+    function showTab(tab) {
+      if (tab.getAttribute('aria-selected') === 'true') return;
+      const isGeneral = tab === generalTab;
+      if (!isGeneral) {
+        generalScrollTop = scroller.scrollTop;
+        renderProgress();
+      }
+      generalTab.setAttribute('aria-selected', String(isGeneral));
+      progressTab.setAttribute('aria-selected', String(!isGeneral));
+      generalTab.tabIndex = isGeneral ? 0 : -1;
+      progressTab.tabIndex = isGeneral ? -1 : 0;
+      byId('general-panel').hidden = !isGeneral;
+      byId('progress-panel').hidden = isGeneral;
+      scroller.scrollTop = isGeneral ? generalScrollTop : 0;
+    }
+
+    function goToSection(section) {
+      showTab(generalTab);
+      const heading = section.querySelector('h2');
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+      section.scrollIntoView({ block: 'start' });
+    }
+
+    form.addEventListener('submit', (event) => event.preventDefault());
+    byId('business-unit').addEventListener('change', updateBusinessUnit);
+    byId('start-date').addEventListener('input', (event) => {
+      byId('end-date').min = event.target.value;
+    });
+    for (const toggle of form.querySelectorAll('.switch')) {
+      const updateSwitch = () => {
+        toggle.nextElementSibling.textContent = toggle.checked ? 'Yes' : 'No';
+      };
+      toggle.addEventListener('change', updateSwitch);
+      updateSwitch();
+    }
+
+    for (const vendor of vendors) vendorSelect.add(new Option(vendorLabel(vendor), vendor.id));
+    vendorSelect.addEventListener('change', updateVendorSummary);
+    byId('open-vendor').addEventListener('click', () => {
+      vendorSearch.value = '';
+      renderVendorResults();
+      vendorDialog.showModal();
+    });
+    byId('close-vendor').addEventListener('click', () => vendorDialog.close());
+    vendorSearch.addEventListener('input', renderVendorResults);
+
+    for (const tab of [generalTab, progressTab]) {
+      tab.addEventListener('click', () => showTab(tab));
+      tab.addEventListener('keydown', (event) => {
+        const destinations = { ArrowLeft: tab === generalTab ? progressTab : generalTab, ArrowRight: tab === generalTab ? progressTab : generalTab, Home: generalTab, End: progressTab };
+        const destination = destinations[event.key];
+        if (!destination) return;
+        event.preventDefault();
+        showTab(destination);
+        destination.focus();
+      });
+    }
+
+    const navToggle = byId('toggle-nav');
+    const compactLayout = matchMedia('(max-width: 800px)');
+    function setNavigationCollapsed(collapsed) {
+      byId('sidebar').classList.toggle('is-collapsed', collapsed);
+      navToggle.setAttribute('aria-expanded', String(!collapsed));
+      navToggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+    }
+    setNavigationCollapsed(compactLayout.matches);
+    compactLayout.addEventListener('change', (event) => setNavigationCollapsed(event.matches));
+    navToggle.addEventListener('click', () => setNavigationCollapsed(navToggle.getAttribute('aria-expanded') === 'true'));
+    for (const link of byId('sidebar-links').querySelectorAll('a')) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        goToSection(byId('assessment-details'));
+      });
+    }
+  </script>
+</body>
+</html>
